@@ -31,13 +31,6 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
 
   private val pluginFile = projectDir.resolve("plugins.sbt")
 
-  // private val ensimeVersion = "2.0.0-SNAPSHOT"
-  // private val secretSbtConfigExtra = s"""
-  //                                       |// this is where the ensime-server snapshots are hosted
-  //                                       |resolvers += Resolver.sonatypeRepo("snapshots")
-  //                                       |libraryDependencies += "org.ensime" %% "ensime" % "$ensimeVersion"
-  //                                       |""".stripMargin
-
   private def setup(): Unit = {
     setConfig(defaultConfig)
     setPlugins(defaultConfig)
@@ -98,7 +91,6 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
     var sbtError = false
 
     while (read != -1 && !done) {
-
       read = fout.read()
       if (read == 10) {
         val line = chars.mkString
@@ -113,6 +105,7 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
         chars += read.toChar
       }
     }
+
     if (sbtError) {
       setup()
       process("r", noop, reload = false)
@@ -131,9 +124,17 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
   private def process(command: String,
                       lineCallback: LineCallback,
                       reload: Boolean): Boolean = {
-    fin.write((command + nl).getBytes)
-    fin.flush()
-    collect(lineCallback, reload)
+    try {
+      fin.write((command + nl).getBytes)
+      fin.flush()
+      collect(lineCallback, reload)
+    } catch {
+      case e: IOException => {
+        // when the snippet is pkilled (timeout) the sbt output stream is closed
+        if (e.getMessage == "Stream closed") true
+        else throw e
+      }
+    }
   }
 
   def kill(): Unit = {
@@ -170,7 +171,7 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
   }
 
   private def setConfig(inputs: Inputs): Unit = {
-    writeFile(buildFile, prompt + nl + inputs.sbtConfig)// + nl + secretSbtConfigExtra)
+    writeFile(buildFile, prompt + nl + inputs.sbtConfig)
     currentSbtConfig = inputs.sbtConfig
   }
 
@@ -219,16 +220,12 @@ class Sbt(defaultConfig: Inputs, production: Boolean) {
 
     if (!reloadError) {
       write(codeFile, inputs.code, truncate = true)
-      try {
-        if (isReloading && !commandIfNeedsReload.isEmpty)
-          process(commandIfNeedsReload, lineCallback, reload)
-        if (!command.isEmpty) process(command, lineCallback, reload)
-      } catch {
-        case e: IOException => {
-          // when the snippet is pkilled (timeout) the sbt output stream is closed
-          if (e.getMessage == "Stream closed") ()
-          else throw e
-        }
+      if (isReloading && !commandIfNeedsReload.isEmpty) {
+        process(commandIfNeedsReload, lineCallback, reload)
+      }
+
+      if (!command.isEmpty) {
+        process(command, lineCallback, reload)
       }
     }
 

@@ -20,4 +20,6 @@ package object client {
   def dontSerializeOption[T]: ReadWriter[Option[T]] = dontSerialize(None)
 
   def dontSerializeMap[K, V]: ReadWriter[Map[K, V]] = dontSerialize(Map())
+
+  def dontSerializeList[T]: ReadWriter[List[T]] = dontSerialize(List())
 }

@@ -181,12 +181,12 @@ lazy val sbtRunner = project
         val artifact = assembly.value
         val artifactTargetPath = s"/app/${artifact.name}"
 
-        val logbackConfDestination = "/root/logback.xml"
+        val logbackConfDestination = "/home/scastie/logback.xml"
 
         new Dockerfile {
-          from("scalacenter/scastie-docker-sbt:0.0.30")
+          from("scalacenter/scastie-docker-sbt:0.0.31")
 
-          add(ivy / "local" / org, s"/root/.ivy2/local/$org")
+          add(ivy / "local" / org, s"/home/scastie/.ivy2/local/$org")
 
           add(artifact, artifactTargetPath)
 
@@ -284,8 +284,7 @@ lazy val codemirror = project
     libraryDependencies ++= Seq(
       "org.scala-js" %%% "scalajs-dom" % scalajsDomVersion,
       "org.querki" %%% "querki-jsext" % "0.8"
-    ),
-    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
+    )
   )
   .enablePlugins(ScalaJSPlugin)
 
@@ -303,29 +302,22 @@ def reactWithDepends(artifact: String,
 lazy val client = project
   .settings(baseSettings)
   .settings(
+    test := {},
     skip in packageJSDependencies := false,
     jsDependencies ++= Seq(
       react("react-with-addons", "React"),
       reactWithDepends("react-dom", "ReactDOM", "react-with-addons"),
       reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom"),
-      reactWithDepends("react-dom", "ReactDOM", "react-with-addons", Test),
-      reactWithDepends("react-dom-server", "ReactDOMServer", "react-dom", Test),
-      RuntimeDOM % Test,
       "org.webjars.bower" % "raven-js" % "3.11.0" /
         "dist/raven.js" minified "dist/raven.min.js"
     ),
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "extra" % "1.0.0",
-      "com.github.japgolly.scalajs-react" %%% "test" % "1.0.0" % Test,
-      "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
       "org.webjars" % "font-awesome" % "4.7.0",
       "org.webjars.npm" % "firacode" % "1.205.0",
       "org.webjars.bower" % "bourbon" % "3.1.8",
       "org.webjars.bower" % "neat" % "1.8.0"
-    ),
-    requiresDOM := true,
-    scalaJSStage in Test := FastOptStage,
-    jsEnv in Test := new PhantomJS2Env(scalaJSPhantomJSClassLoader.value)
+    )
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb)
   .dependsOn(codemirror, api212JS)

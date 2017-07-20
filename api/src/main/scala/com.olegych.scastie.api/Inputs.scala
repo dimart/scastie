@@ -4,6 +4,8 @@ package api
 import buildinfo.BuildInfo.{version => buildVersion}
 import upickle.default.{ReadWriter, macroRW => upickleMacroRW}
 
+import System.{lineSeparator => nl}
+
 object Inputs {
   val defaultCode = """List("Hello", "World").mkString("", ", ", "!")"""
 
@@ -76,7 +78,7 @@ case class Inputs(
 
     s"""|$targetConfig
         |addSbtPlugin("org.scastie" % "sbt-scastie" % "$buildVersion")
-        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-M15")
+        |addSbtPlugin("io.get-coursier" % "sbt-coursier" % "1.0.0-RC7")
         |$sbtPluginsConfigExtra
         |""".stripMargin
 
@@ -174,6 +176,21 @@ case class Inputs(
               nl + ")"
             )
       }
+
+    // val ensimeConfig = {
+    //   val base = "ensimeIgnoreMissingDirectories := true"
+
+    //   // https://github.com/scalacenter/scastie/issues/278
+    //   val snapshot =
+    //     if (target.targetType != ScalaTargetType.Dotty) {
+    //       """|resolvers += Resolver.sonatypeRepo("snapshots")
+    //          |libraryDependencies += "org.ensime" %% "ensime" % "2.0.0-SNAPSHOT"""".stripMargin
+    //     } else ""
+
+    //   base + nl + snapshot
+    // }
+    // |
+    // |$ensimeConfig
 
     s"""|$targetConfig
         |

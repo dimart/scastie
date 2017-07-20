@@ -72,11 +72,11 @@ class DispatchActor(progressActor: ActorRef, statusActor: ActorRef)
   system.scheduler.schedule(0.seconds, 1.seconds) {
     implicit val timeout = Timeout(1.seconds)
     try {
-      val res = 
-      Await.result(
-        Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing)),
-        1.seconds
-      )
+      val res =
+        Await.result(
+          Future.sequence(loadBalancer.servers.map(_.ref ? SbtPing)),
+          1.seconds
+        )
       ()
     } catch {
       case e: TimeoutException => ()

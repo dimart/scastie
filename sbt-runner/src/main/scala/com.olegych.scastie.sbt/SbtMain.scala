@@ -15,13 +15,16 @@ object SbtMain {
   private val logger = LoggerFactory.getLogger(getClass)
 
   def main(args: Array[String]): Unit = {
-    val pid = writeRunningPid()
-    logger.info(s"Starting sbtRunner pid: $pid")
+    val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
+    val isProduction = config.getBoolean("production")
+
+    if (isProduction) {
+      val pid = writeRunningPid()
+      logger.info(s"Starting sbtRunner pid: $pid")
+    }
 
     val system = ActorSystem("SbtRemote")
 
-    val config = ConfigFactory.load().getConfig("com.olegych.scastie.sbt")
-    val isProduction = config.getBoolean("production")
     val timeout = {
       val timeunit = TimeUnit.SECONDS
       FiniteDuration(

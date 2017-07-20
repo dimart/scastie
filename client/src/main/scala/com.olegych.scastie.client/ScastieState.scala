@@ -51,6 +51,12 @@ object ScastieState {
 
   implicit val pkl: ReadWriter[ScastieState] =
     upickleMacroRW[ScastieState]
+
+  implicit val dontSerializeCompletions: ReadWriter[List[Completion]] =
+    dontSerializeList[Completion]
+
+  implicit val dontSerializeTypeAtInfo: ReadWriter[Option[TypeInfoAt]] =
+    dontSerializeOption[TypeInfoAt]
 }
 
 case class SnippetState(
@@ -168,7 +174,7 @@ case class ScastieState(
   def run(snippetId: SnippetId): ScastieState = {
     clearOutputs.resetScalajs
       .setRunning(true)
-      .logSystem("Connecting.")
+      .logSystem("Sending task to the server.")
       .copyAndSave(inputsHasChanged = false)
       .setSnippetId(snippetId)
   }
